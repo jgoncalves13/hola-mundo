@@ -1,13 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>Hola Mundo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script type="text/javascript">
+    const webIntegrationId = "mjiMv1xnxk7R0kUNZ1Fxz7gSqjd_l1J2";
+    function login() {
+      function isLoggedIn() {
+        return fetch("https://keyruspt.eu.qlikcloud.com/api/v1/users/me", {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'qlik-web-integration-id': webIntegrationId,
+          },
+        }).then(response => {
+          return response.status === 200;
+        });
+      }
+      return isLoggedIn().then(loggedIn => {
+        if (!loggedIn) {
+          // check login
+            window.top.location.href = "https://keyruspt.eu.qlikcloud.com/login?qlik-web-integration-id=" + webIntegrationId + "&returnto=" + top.location.href;
+          throw new Error('not logged in');
+        }
+      });
+    }
+	login()
+  </script>
 </head>
-<body>
-  <h1>¡Hola Mundo!</h1>
-  <p>Esta es mi primera página en GitHub Pages.</p>
-<iframe src="https://keyruspt.eu.qlikcloud.com/single/?appid=2600467e-7e6c-4c36-9fb4-2139caa1cb4d&sheet=pwn&theme=horizon&opt=ctxmenu,currsel&select=$::Usu%C3%A1rio,Selecione%20Apenas%20um%20Usu%C3%A1rio" style="border:none;width:100%;height:100%;">
-</iframe>
+
+<body style="height:600px;">
+	<iframe
+    src="https://keyruspt.eu.qlikcloud.com/single/?appid=2600467e-7e6c-4c36-9fb4-2139caa1cb4d&sheet=pwn&theme=horizon&opt=ctxmenu,currsel&select=$::Usu%C3%A1rio,Selecione%20Apenas%20um%20Usu%C3%A1rio"
+    style="border:none;width:100%;height:100%;">
+  </iframe>
 </body>
+
 </html>
