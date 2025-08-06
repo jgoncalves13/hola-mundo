@@ -5,7 +5,8 @@
   const state = "test123"; // Puedes generar algo aleatorio también
 
   function authenticate() {
-    const authUrl = `https://${tenant}/login/oauth2/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20email%20profile&state=${state}`;
+    // URL de autorización corregida
+    const authUrl = `https://${tenant}/oauth/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20email%20profile&state=${state}`;
     window.location.href = authUrl;
   }
 
