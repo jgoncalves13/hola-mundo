@@ -1,7 +1,3 @@
-Aquí tienes el código HTML completo con los cambios sugeridos para resolver el error del parámetro state y para embeber correctamente la aplicación de Qlik Sense.
-
-HTML
-
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -11,14 +7,13 @@ HTML
     body { font-family: Arial, sans-serif; margin: 40px; }
     iframe { width: 100%; height: 600px; border: none; margin-top: 20px; }
     #tokenDisplay { margin-top: 20px; font-size: 14px; color: green; }
-    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
-    #iframeContainer { border: 1px solid #ccc; padding: 10px; }
+    button { padding: 10px 20px; font-size: 16px; }
   </style>
 </head>
 <body>
 
   <h1>Login OAuth2 + Qlik Sense Embed</h1>
-  <button id="loginButton" onclick="login()">Iniciar sessão com Qlik</button>
+  <button onclick="login()">Iniciar sessão com Qlik</button>
   <div id="tokenDisplay"></div>
   <div id="iframeContainer" style="display:none;">
     <h2>Aplicação Qlik Embebida</h2>
@@ -32,43 +27,26 @@ HTML
     const authUrl = `https://${tenant}/oauth/authorize`;
     const responseType = "token";
     const scope = "openid profile email";
+    const state = "abc123"; // <- requerido por Qlik
 
     function login() {
-      // Genera un valor aleatorio para el parámetro 'state' para seguridad
-      const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      
-      // Almacena el 'state' para validarlo al regresar
-      sessionStorage.setItem('oauth_state', state);
-
       const url = `${authUrl}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}&state=${state}`;
       window.location.href = url;
     }
 
-    // Detectar token después del login
     window.onload = () => {
       const hash = window.location.hash.substr(1);
       const params = new URLSearchParams(hash);
       const accessToken = params.get("access_token");
-      const returnedState = params.get("state");
-      const originalState = sessionStorage.getItem('oauth_state');
+      const stateParam = params.get("state");
 
-      // Si hay un token y los estados coinciden, procede
-      if (accessToken && returnedState && returnedState === originalState) {
-        sessionStorage.removeItem('oauth_state'); // Limpia el estado
-        
-        document.getElementById("loginButton").style.display = 'none'; // Oculta el botón
-        document.getElementById("tokenDisplay").innerText = "Access Token: " + accessToken;
-        
-        // Muestra el contenedor del iframe
+      if (accessToken) {
+        document.getElementById("tokenDisplay").innerText = "✅ Access Token recebido com sucesso.";
         document.getElementById("iframeContainer").style.display = "block";
-        
-        // Se agrega el 'qlik-token' a la URL para autenticar el iframe
         document.getElementById("qlikFrame").src =
-          `https://${tenant}/single/?appid=2600467e-7e6c-4c36-9fb4-2139caa1cb4d&theme=classic&opt=ctxmenu,currsel&qlik-token=${accessToken}`;
-      } else if (window.location.hash.includes("error")) {
-          // Manejar errores de OAuth
-          document.getElementById("tokenDisplay").innerText = "Error de autenticación: " + params.get("error_description");
-          document.getElementById("tokenDisplay").style.color = "red";
+          `https://${tenant}/single/?appid=2600467e-7e6c-4c36-9fb4-2139caa1cb4d&theme=classic&opt=ctxmenu,currsel`;
+      } else {
+        document.getElementById("tokenDisplay").innerText = "⚠️ Aguardando autenticação...";
       }
     };
   </script>
