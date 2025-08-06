@@ -1,55 +1,66 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Embed Qlik Sense com OAuth2</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; }
-    iframe { width: 100%; height: 600px; border: none; margin-top: 20px; }
-    #tokenDisplay { margin-top: 20px; font-size: 14px; color: green; }
-    button { padding: 10px 20px; font-size: 16px; }
-  </style>
+  <title>OAuth M2M con Qlik Cloud</title>
 </head>
 <body>
-
-  <h1>Login OAuth2 + Qlik Sense Embed</h1>
-  <button onclick="login()">Iniciar sessão com Qlik</button>
-  <div id="tokenDisplay"></div>
-  <div id="iframeContainer" style="display:none;">
-    <h2>Aplicação Qlik Embebida</h2>
-    <iframe id="qlikFrame"></iframe>
-  </div>
+  <h1>Probar conexión OAuth M2M con Qlik Sense Cloud</h1>
+  <button onclick="connectToQlik()">Conectar</button>
+  <pre id="result"></pre>
 
   <script>
-    const clientId = "1bcfdbe59d689c9dfd05f168ff04f6a8";
-    const tenant = "keyruspt.eu.qlikcloud.com";
-    const redirectUri = window.location.href.split('#')[0];
-    const authUrl = `https://${tenant}/oauth/authorize`;
-    const responseType = "token";
-    const scope = "admin_classic";
-    const state = "abc123"; // <- requerido por Qlik
+    async function getAccessToken() {
+      const options = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          client_id: "1bcfdbe59d689c9dfd05f168ff04f6a8",
+          client_secret: "4fd075dcd69d2c24b1cdf373be9f997cc11ca79e7f8d6f7bb3435eb2ec9f37ca",
+          grant_type: "client_credentials",
+          scope: "user_default"
+        })
+      };
 
-    function login() {
-      const url = `${authUrl}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}&state=${state}`;
-      window.location.href = url;
+      const response = await fetch("https://keyruspt.eu.qlikcloud.com/oauth/token", options);
+
+      if (response.ok) {
+        const tokenInfo = await response.json();
+        return tokenInfo.access_token;
+      } else {
+        console.error("Error al obtener token");
+        return null;
+      }
     }
 
-    window.onload = () => {
-      const hash = window.location.hash.substr(1);
-      const params = new URLSearchParams(hash);
-      const accessToken = params.get("access_token");
-      const stateParam = params.get("state");
+    async function connectToQlik() {
+      const accessToken = await getAccessToken();
 
-      if (accessToken) {
-        document.getElementById("tokenDisplay").innerText = "✅ Access Token recebido com sucesso.";
-        document.getElementById("iframeContainer").style.display = "block";
-        document.getElementById("qlikFrame").src =
-          `https://${tenant}/single/?appid=2600467e-7e6c-4c36-9fb4-2139caa1cb4d&theme=classic&opt=ctxmenu,currsel`;
-      } else {
-        document.getElementById("tokenDisplay").innerText = "⚠️ Aguardando autenticação...";
+      if (!accessToken) {
+        document.getElementById("result").innerText = "No se pudo obtener el token";
+        return;
       }
-    };
-  </script>
 
+      const options = {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`
+        }
+      };
+
+      const response = await fetch("https://keyruspt.eu.qlikcloud.com/api/v1/tenants/me", options);
+
+      if (response.ok) {
+        const data = await response.json();
+        document.getElementById("result").innerText = JSON.stringify(data, null, 2);
+      } else {
+        document.getElementById("result").innerText = "Error al llamar a la API";
+      }
+    }
+  </script>
 </body>
 </html>
