@@ -26,7 +26,7 @@
     const redirectUri = window.location.href.split('#')[0]; // esta mesma página
     const authUrl = `https://${tenant}/oauth/authorize`;
     const responseType = "token";
-    const scope = "openid profile email";
+    const scope = "admin_classic";
 
     function login() {
       const url = `${authUrl}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}`;
