@@ -24,8 +24,6 @@
     const clientId = "1bcfdbe59d689c9dfd05f168ff04f6a8";
     const tenant = "keyruspt.eu.qlikcloud.com";
     const redirectUri = window.location.href.split('#')[0];
-    console.log("redirectUri:", redirectUri);
-    document.getElementById("redirectUriDisplay").innerText = "Redirect URI: " + redirectUri;
     const authUrl = `https://${tenant}/oauth/authorize`;
     const responseType = "token";
     const scope = "admin_classic";
