@@ -1,27 +1,47 @@
-<script>
-  const tenant = "keyruspt.eu.qlikcloud.com";
-  const clientId = "1bcfdbe59d689c9dfd05f168ff04f6a8";
-  const redirectUri = window.location.href;
-  const state = "test123"; // Puedes generar algo aleatorio también
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Qlik OAuth2 Embed Test</title>
+</head>
+<body>
+  <h2>OAuth2 Login to Qlik Sense Cloud</h2>
+  <button onclick="authenticate()">Iniciar sesión</button>
 
-  function authenticate() {
-    // URL de autorización corregida
-    const authUrl = `https://${tenant}/oauth/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20email%20profile&state=${state}`;
-    window.location.href = authUrl;
-  }
+  <p id="status"></p>
 
-  function getAccessTokenFromUrl() {
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    return params.get("access_token");
-  }
+  <iframe id="qlikFrame" style="display:none; width:100%; height:600px; border:none;"></iframe>
 
-  const accessToken = getAccessTokenFromUrl();
+  <script>
+    const tenant = "keyruspt.eu.qlikcloud.com";           // ejemplo: keyruspt.eu.qlikcloud.com
+    const clientId = "1bcfdbe59d689c9dfd05f168ff04f6a8";      // client ID de tu app OAuth2
+    const appId = "2600467e-7e6c-4c36-9fb4-2139caa1cb4d";            // ID de la aplicación que quieres mostrar
+    const redirectUri = window.location.href;
+    const state = "test123"; // Puedes hacer más dinámico
 
-  if (!accessToken) {
-    authenticate();
-  } else {
-    document.getElementById("qlikFrame").src =
-      `https://${tenant}/single/?appid=2600467e-7e6c-4c36-9fb4-2139caa1cb4d&theme=classic&opt=ctxmenu,currsel&qlik-token=${accessToken}`;
-  }
-</script>
+    function authenticate() {
+      const authUrl = `https://${tenant}/login/oauth2/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20email%20profile&state=${state}`;
+      window.location.href = authUrl;
+    }
+
+    function getAccessTokenFromUrl() {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      return params.get("access_token");
+    }
+
+    const accessToken = getAccessTokenFromUrl();
+
+    const statusElem = document.getElementById("status");
+    const qlikFrame = document.getElementById("qlikFrame");
+
+    if (accessToken) {
+      statusElem.textContent = "✅ Autenticación exitosa. Mostrando aplicación Qlik...";
+      qlikFrame.src = `https://${tenant}/single/?appid=${appId}&theme=classic&opt=ctxmenu,currsel&qlik-token=${accessToken}`;
+      qlikFrame.style.display = "block";
+    } else {
+      statusElem.textContent = "⚠️ No estás autenticado aún. Haz clic en el botón para iniciar sesión.";
+    }
+  </script>
+</body>
+</html>
