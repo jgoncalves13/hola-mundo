@@ -58,11 +58,12 @@
       const sheetId = "pwn"; // Opcional
       const tenant = "keyruspt.eu.qlikcloud.com";
 
-      const iframeUrl = `https://${tenant}/single/?appid=${appId}&sheet=${sheetId}&opt=ctxmenu,currsel&theme=classic`;
+      const iframeUrl = `https://${tenant}/single/?appid=${appId}&sheet=${sheetId}&opt=ctxmenu,currsel&theme=classic&qlik-token=${accessToken}`;
 
       const iframe = document.getElementById("qlikApp");
       iframe.src = iframeUrl;
       iframe.style.display = "block";
+
     }
   </script>
 </body>
