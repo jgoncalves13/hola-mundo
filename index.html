@@ -21,8 +21,8 @@
   </div>
 
   <script>
-    const clientId = "YOUR_CLIENT_ID";
-    const tenant = "YOUR_TENANT"; // Ex: empresa.eu.qlikcloud.com
+    const clientId = "1bcfdbe59d689c9dfd05f168ff04f6a8";
+    const tenant = "keyruspt.eu.qlikcloud.com"; // Ex: empresa.eu.qlikcloud.com
     const redirectUri = window.location.href.split('#')[0]; // esta mesma página
     const authUrl = `https://${tenant}/oauth/authorize`;
     const responseType = "token";
@@ -44,7 +44,7 @@
         // Mostrar iframe com app embebida
         document.getElementById("iframeContainer").style.display = "block";
         document.getElementById("qlikFrame").src =
-          `https://${tenant}/single/?appid=YOUR_APP_ID&theme=classic&opt=ctxmenu,currsel`;
+          `https://${tenant}/single/?appid=2600467e-7e6c-4c36-9fb4-2139caa1cb4d&theme=classic&opt=ctxmenu,currsel`;
       }
     };
   </script>
