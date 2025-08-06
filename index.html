@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Embed Qlik App con OAuth M2M</title>
+  <title>Embed Qlik App using OAuth M2M</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 40px; }
     iframe { width: 100%; height: 600px; border: none; margin-top: 20px; }
@@ -11,7 +11,7 @@
 </head>
 <body>
   <h1>Embed Qlik App con OAuth M2M</h1>
-  <button onclick="connectAndEmbed()">Conectar y Embebed App</button>
+  <button onclick="connectAndEmbed()">Conectar e Embutir Aplicação</button>
   <div id="result"></div>
   <iframe id="qlikApp" style="display: none;"></iframe>
 
@@ -37,7 +37,7 @@
         const tokenInfo = await response.json();
         return tokenInfo.access_token;
       } else {
-        console.error("Error al obtener token");
+        console.error("Erro ao obter token");
         return null;
       }
     }
@@ -46,11 +46,11 @@
       const accessToken = await getAccessToken();
 
       if (!accessToken) {
-        document.getElementById("result").innerText = "No se pudo obtener el token";
+        document.getElementById("result").innerText = "Não foi possível obter o token";
         return;
       }
 
-      document.getElementById("result").innerText = "Token obtenido. Embebiendo aplicación...";
+      document.getElementById("result").innerText = "Token obtido. Incorporando a aplicação...";
 
       // Ajusta estos valores con tu app y hoja reales
       const appId = "2600467e-7e6c-4c36-9fb4-2139caa1cb4d";
