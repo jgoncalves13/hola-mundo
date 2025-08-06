@@ -62,10 +62,11 @@
 
       // Ajusta estos valores con tu app y hoja reales
       const appId = "2600467e-7e6c-4c36-9fb4-2139caa1cb4d";
-      const sheetId = "pwn"; // Opcional
+      //const sheetId = "pwn"; // Opcional
       const tenant = "keyruspt.eu.qlikcloud.com";
 
-      const iframeUrl = `https://${tenant}/single/?appid=${appId}&sheet=${sheetId}&opt=ctxmenu,currsel&theme=classic&qlik-token=${accessToken}`;
+      //const iframeUrl = `https://${tenant}/single/?appid=${appId}&sheet=${sheetId}&opt=ctxmenu,currsel&theme=classic&qlik-token=${accessToken}`;
+      const iframeUrl = `https://${tenant}/single/?appid=${appId}&opt=ctxmenu,currsel&theme=classic&qlik-token=${accessToken}`;
 
       const iframe = document.getElementById("qlikApp");
       iframe.src = iframeUrl;
