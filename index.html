@@ -1,47 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
   <meta charset="UTF-8" />
-  <title>Qlik OAuth2 Embed Test</title>
+  <title>Embed Qlik Sense com OAuth2</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    iframe { width: 100%; height: 600px; border: none; margin-top: 20px; }
+    #tokenDisplay { margin-top: 20px; font-size: 14px; color: green; }
+    button { padding: 10px 20px; font-size: 16px; }
+  </style>
 </head>
 <body>
-  <h2>OAuth2 Login to Qlik Sense Cloud</h2>
-  <button onclick="authenticate()">Iniciar sesión</button>
 
-  <p id="status"></p>
-
-  <iframe id="qlikFrame" style="display:none; width:100%; height:600px; border:none;"></iframe>
+  <h1>Login OAuth2 + Qlik Sense Embed</h1>
+  <button onclick="login()">Iniciar sessão com Qlik</button>
+  <div id="tokenDisplay"></div>
+  <div id="iframeContainer" style="display:none;">
+    <h2>Aplicação Qlik Embebida</h2>
+    <iframe id="qlikFrame"></iframe>
+  </div>
 
   <script>
-    const tenant = "keyruspt.eu.qlikcloud.com";           // ejemplo: keyruspt.eu.qlikcloud.com
-    const clientId = "1bcfdbe59d689c9dfd05f168ff04f6a8";      // client ID de tu app OAuth2
-    const appId = "2600467e-7e6c-4c36-9fb4-2139caa1cb4d";            // ID de la aplicación que quieres mostrar
-    const redirectUri = window.location.href;
-    const state = "test123"; // Puedes hacer más dinámico
+    const clientId = "YOUR_CLIENT_ID";
+    const tenant = "YOUR_TENANT"; // Ex: empresa.eu.qlikcloud.com
+    const redirectUri = window.location.href.split('#')[0]; // esta mesma página
+    const authUrl = `https://${tenant}/oauth/authorize`;
+    const responseType = "token";
+    const scope = "openid profile email";
 
-    function authenticate() {
-      const authUrl = `https://${tenant}/login/oauth2/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20email%20profile&state=${state}`;
-      window.location.href = authUrl;
+    function login() {
+      const url = `${authUrl}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}`;
+      window.location.href = url;
     }
 
-    function getAccessTokenFromUrl() {
-      const hash = window.location.hash.substring(1);
+    // Detectar token depois do login
+    window.onload = () => {
+      const hash = window.location.hash.substr(1);
       const params = new URLSearchParams(hash);
-      return params.get("access_token");
-    }
+      const accessToken = params.get("access_token");
 
-    const accessToken = getAccessTokenFromUrl();
-
-    const statusElem = document.getElementById("status");
-    const qlikFrame = document.getElementById("qlikFrame");
-
-    if (accessToken) {
-      statusElem.textContent = "✅ Autenticación exitosa. Mostrando aplicación Qlik...";
-      qlikFrame.src = `https://${tenant}/single/?appid=${appId}&theme=classic&opt=ctxmenu,currsel&qlik-token=${accessToken}`;
-      qlikFrame.style.display = "block";
-    } else {
-      statusElem.textContent = "⚠️ No estás autenticado aún. Haz clic en el botón para iniciar sesión.";
-    }
+      if (accessToken) {
+        document.getElementById("tokenDisplay").innerText = "Access Token: " + accessToken;
+        // Mostrar iframe com app embebida
+        document.getElementById("iframeContainer").style.display = "block";
+        document.getElementById("qlikFrame").src =
+          `https://${tenant}/single/?appid=YOUR_APP_ID&theme=classic&opt=ctxmenu,currsel`;
+      }
+    };
   </script>
+
 </body>
 </html>
