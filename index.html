@@ -66,7 +66,7 @@
       const tenant = "keyruspt.eu.qlikcloud.com";
 
       //const iframeUrl = `https://${tenant}/single/?appid=${appId}&sheet=${sheetId}&opt=ctxmenu,currsel&theme=classic&qlik-token=${accessToken}`;
-      const iframeUrl = `https://${tenant}/single/?appid=${appId}&opt=ctxmenu,currsel&theme=classic&qlik-token=${accessToken}`;
+      const iframeUrl = `https://${tenant}/sense/app/${appId}`;
 
       const iframe = document.getElementById("qlikApp");
       iframe.src = iframeUrl;
