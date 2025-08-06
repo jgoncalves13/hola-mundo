@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Embed Qlik App using OAuth M2M</title>
+  <title>OAuth2 Authorization Code Flow con Qlik Sense Cloud</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 40px; }
     iframe { width: 100%; height: 600px; border: none; margin-top: 20px; }
@@ -10,60 +10,46 @@
   </style>
 </head>
 <body>
-  <h1>Embed Qlik App con OAuth M2M</h1>
-  <button onclick="connectAndEmbed()">Conectar e Embutir Aplicação</button>
+  <h1>OAuth2 Authorization Code Flow con Qlik Sense Cloud</h1>
+  <button onclick="startAuthFlow()">Iniciar Sesión</button>
   <div id="result"></div>
   <iframe id="qlikApp" style="display: none;"></iframe>
 
   <script>
-    async function getAccessToken() {
-      const options = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify({
-          client_id: "6099c3a096def460e71f581c6465d572",
-          client_secret: "144b9dc2c363da25e0bc1e810b0634b6ddf99a3dbc208c74d711e5a7e9ca38db",
-          grant_type: "client_credentials",
-          impersonated_user: "juan.goncalves@keyrus.com",
-          scope: "user_default admin_classic impersonate"
-        })
-      };
+    const clientId = "6099c3a096def460e71f581c6465d572"; // Reemplaza con tu client_id
+    const redirectUri = "https://jgoncalves13.github.io/"; // Debe estar registrado en Qlik
+    const tenant = "keyruspt.eu.qlikcloud.com";
+    const appId = "2600467e-7e6c-4c36-9fb4-2139caa1cb4d";
+    const sheetId = "pwn";
 
-      const response = await fetch("https://keyruspt.eu.qlikcloud.com/oauth/token", options);
+    function startAuthFlow() {
+      const state = "abc123"; // Valor aleatorio para evitar CSRF
+      const authUrl = `https://${tenant}/oauth/authorize?` +
+        `client_id=${clientId}` +
+        `&response_type=token` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&scope=user_default openid` +
+        `&state=${state}`;
 
-      if (response.ok) {
-        const tokenInfo = await response.json();
-        return tokenInfo.access_token;
-      } else {
-        console.error("Erro ao obter token");
-        return null;
-      }
+      window.location.href = authUrl;
     }
 
-    async function connectAndEmbed() {
-      const accessToken = await getAccessToken();
+    // Al volver del login, parseamos el token
+    window.onload = function () {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get("access_token");
 
-      if (!accessToken) {
-        document.getElementById("result").innerText = "Não foi possível obter o token";
-        return;
+      if (accessToken) {
+        document.getElementById("result").innerText = "Token recibido, cargando app...";
+
+        const iframeUrl = `https://${tenant}/single/?appid=${appId}&sheet=${sheetId}&opt=ctxmenu,currsel&theme=classic&qlikTicket=${accessToken}`;
+        const iframe = document.getElementById("qlikApp");
+        iframe.src = iframeUrl;
+        iframe.style.display = "block";
       }
-
-      document.getElementById("result").innerText = "Token obtido. Incorporando a aplicação...";
-
-      // Ajusta estos valores con tu app y hoja reales
-      const appId = "2600467e-7e6c-4c36-9fb4-2139caa1cb4d";
-      const sheetId = "pwn"; // Opcional
-      const tenant = "keyruspt.eu.qlikcloud.com";
-
-      const iframeUrl = `https://${tenant}/single/?appid=${appId}&sheet=${sheetId}&opt=ctxmenu,currsel&theme=classic`;
-
-      const iframe = document.getElementById("qlikApp");
-      iframe.src = iframeUrl;
-      iframe.style.display = "block";
-    }
+    };
   </script>
 </body>
 </html>
+
