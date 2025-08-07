@@ -1,40 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
-  <meta charset="UTF-8" />
-  <title>Crear usuario con Impersonation</title>
+  <meta charset="UTF-8">
+  <title>Criação de Utilizadores Qlik Sense Cloud</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; }
+    h1 { color: #2e6da4; }
+    label, input, button { font-size: 16px; margin: 10px 0; display: block; }
+    #result { margin-top: 20px; white-space: pre-wrap; color: green; }
+  </style>
 </head>
 <body>
-  <h1>Crear usuario en Qlik Sense Cloud vía OAuth Impersonation</h1>
-  <button onclick="createUser()">Crear usuario</button>
-  <pre id="output"></pre>
+
+  <h1>Criação de Utilizadores Qlik Sense Cloud</h1>
+
+  <label for="emailInput">Email do utilizador:</label>
+  <input type="email" id="emailInput" placeholder="exemplo@empresa.com" required>
+
+  <button onclick="criarUtilizador()">Criação de Utilizador</button>
+
+  <div id="result"></div>
 
   <script>
-    async function createUser() {
-      const tokenEndpoint = "https://keyruspt.eu.qlikcloud.com/oauth/token";
+    async function criarUtilizador() {
+      const email = document.getElementById('emailInput').value.trim();
+      const resultDiv = document.getElementById('result');
+      if (!email) {
+        resultDiv.innerText = "Por favor insira um email válido.";
+        return;
+      }
 
-      const payload = {
-        client_id: "f6706182174fc70842b6161db71246ba",
-        client_secret: "0cb9d1b9c63450eecd4143ffa161f53154ed8eafc07d9658c0e261d7775688a9",
-        grant_type: "urn:qlik:oauth:user-impersonation",
-        user_lookup: {
-          field: "userId",
-          value: "67adbf58f40067e3dae55c0d"
-        },
-        scope: "user_default admin_classic"
-      };
+      resultDiv.innerText = "A obter token...";
 
-      const response = await fetch(tokenEndpoint, {
+      // 1. Obter token
+      const tokenResponse = await fetch("https://keyruspt.eu.qlikcloud.com/oauth/token", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_id: "f6706182174fc70842b6161db71246ba", // <-- Substituir
+          client_secret: "0cb9d1b9c63450eecd4143ffa161f53154ed8eafc07d9658c0e261d7775688a9", // <-- Substituir
+          grant_type: "client_credentials",
+          scope: "admin.users"
+        })
       });
 
-      const result = await response.json();
-      document.getElementById("output").textContent = JSON.stringify(result, null, 2);
+      const tokenData = await tokenResponse.json();
+      const token = tokenData.access_token;
+
+      if (!token) {
+        resultDiv.innerText = "Erro ao obter token: " + JSON.stringify(tokenData, null, 2);
+        return;
+      }
+
+      resultDiv.innerText = "Token obtido. A criar utilizador...";
+
+      // 2. Criar utilizador
+      const userData = {
+        name: email.split("@")[0], // Nome simples
+        email: email,
+        status: "invited",
+        subject: "subj-" + Math.random().toString(36).substring(2, 10),
+        assignedRoles: [{ name: "Developer" }]
+      };
+
+      const userResponse = await fetch("https://keyruspt.eu.qlikcloud.com/api/v1/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(userData)
+      });
+
+      const userResult = await userResponse.json();
+
+      if (userResponse.ok) {
+        resultDiv.innerText = "✅ Utilizador criado com sucesso:\n" + JSON.stringify(userResult, null, 2);
+      } else {
+        resultDiv.innerText = "❌ Erro ao criar utilizador:\n" + JSON.stringify(userResult, null, 2);
+      }
     }
   </script>
+
 </body>
 </html>
