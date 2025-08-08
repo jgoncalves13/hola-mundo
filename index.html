@@ -6,7 +6,7 @@
   <style>
     body { font-family: Arial, sans-serif; padding: 40px; }
     h1 { color: #2e6da4; }
-    label, input, select, button { font-size: 16px; margin: 10px 0; display: block; }
+    label, input, button, select { font-size: 16px; margin: 10px 0; display: block; }
     #result { margin-top: 20px; white-space: pre-wrap; color: green; }
   </style>
 </head>
@@ -17,7 +17,7 @@
   <label for="emailInput">Email do utilizador:</label>
   <input type="email" id="emailInput" placeholder="exemplo@empresa.com" required>
 
-  <label for="groupSelect">Selecionar grupo:</label>
+  <label for="groupSelect">Selecione o grupo:</label>
   <select id="groupSelect"></select>
 
   <button onclick="criarUtilizador()">Criação de Utilizador</button>
@@ -25,51 +25,52 @@
   <div id="result"></div>
 
   <script>
-    let token = "";
+    const tenant = "keyruspt.eu.qlikcloud.com";
+    const clientId = "6099c3a096def460e71f581c6465d572"; // <-- Substituir
+    const clientSecret = "75bca66aa5e957df5bb624cea7d7d609a85e7b6e4bbddc45a4b41ebce0f9eed9"; // <-- Substituir
+    let tokenGlobal = "";
 
     async function obterToken() {
-      const tokenResponse = await fetch("https://keyruspt.eu.qlikcloud.com/oauth/token", {
+      const resp = await fetch(`https://${tenant}/oauth/token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          client_id: "6099c3a096def460e71f581c6465d572", // <-- Substituir
-          client_secret: "75bca66aa5e957df5bb624cea7d7d609a85e7b6e4bbddc45a4b41ebce0f9eed9", // <-- Substituir
+          client_id: clientId,
+          client_secret: clientSecret,
           grant_type: "client_credentials",
-          scope: "user_default admin_classic admin.users admin.groups"
+          scope: "user_default admin_classic admin.users"
         })
       });
-
-      const tokenData = await tokenResponse.json();
-      token = tokenData.access_token;
-      return token;
+      const data = await resp.json();
+      tokenGlobal = data.access_token;
+      return tokenGlobal;
     }
 
     async function carregarGrupos() {
-      const resultDiv = document.getElementById('result');
-      resultDiv.innerText = "Carregando grupos...";
+      const token = await obterToken();
+      if (!token) {
+        document.getElementById("result").innerText = "Erro ao obter token.";
+        return;
+      }
 
-      if (!token) await obterToken();
-
-      const groupResponse = await fetch("https://keyruspt.eu.qlikcloud.com/api/v1/groups", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
+      const resp = await fetch(`https://${tenant}/api/v1/groups`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-
-      const groups = await groupResponse.json();
+      const data = await resp.json();
       const select = document.getElementById("groupSelect");
       select.innerHTML = "";
-
-      groups.data.forEach(group => {
-        const option = document.createElement("option");
-        option.value = group.id; // ID do grupo
-        option.textContent = group.name;
-        select.appendChild(option);
-      });
-
-      resultDiv.innerText = "Grupos carregados.";
+      if (data.data && data.data.length > 0) {
+        data.data.forEach(group => {
+          const opt = document.createElement("option");
+          opt.value = group.id; // guardamos o ID
+          opt.textContent = group.name;
+          select.appendChild(opt);
+        });
+      } else {
+        const opt = document.createElement("option");
+        opt.textContent = "Nenhum grupo encontrado";
+        select.appendChild(opt);
+      }
     }
 
     async function criarUtilizador() {
@@ -82,56 +83,41 @@
         return;
       }
 
-      resultDiv.innerText = "Criando utilizador...";
+      if (!tokenGlobal) {
+        await obterToken();
+      }
 
-      // Criar utilizador
+      resultDiv.innerText = "A criar utilizador...";
+
       const userData = {
         name: email.split("@")[0],
         email: email,
         status: "active",
-        subject: "cavida.pt/" + email, // subject único
-        assignedRoles: [{ name: "EmbeddedAnalyticsUser" }]
+        subject: "cavida.pt/" + email,
+        assignedRoles: [{ name: "EmbeddedAnalyticsUser" }],
+        assignedGroups: [{ id: groupId }] // asigna directo al grupo
       };
 
-      const userResponse = await fetch("https://keyruspt.eu.qlikcloud.com/api/v1/users", {
+      const userResponse = await fetch(`https://${tenant}/api/v1/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${tokenGlobal}`
         },
         body: JSON.stringify(userData)
       });
 
       const userResult = await userResponse.json();
 
-      if (!userResponse.ok) {
-        resultDiv.innerText = "❌ Erro ao criar utilizador:\n" + JSON.stringify(userResult, null, 2);
-        return;
-      }
-
-      resultDiv.innerText = "✅ Utilizador criado com sucesso:\n" + JSON.stringify(userResult, null, 2);
-
-      // Adicionar ao grupo selecionado
-      const groupResponse = await fetch(`https://keyruspt.eu.qlikcloud.com/api/v1/groups/${groupId}/members`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ subject: userResult.subject })
-      });
-
-      const groupResult = await groupResponse.json();
-
-      if (groupResponse.ok) {
-        resultDiv.innerText += "\n✅ Adicionado ao grupo com sucesso:\n" + JSON.stringify(groupResult, null, 2);
+      if (userResponse.ok) {
+        resultDiv.innerText = "✅ Utilizador criado com sucesso:\n" + JSON.stringify(userResult, null, 2);
       } else {
-        resultDiv.innerText += "\n❌ Erro ao adicionar ao grupo:\n" + JSON.stringify(groupResult, null, 2);
+        resultDiv.innerText = "❌ Erro ao criar utilizador:\n" + JSON.stringify(userResult, null, 2);
       }
     }
 
-    // Carregar lista de grupos assim que a página abre
-    window.onload = carregarGrupos;
+    // Carrega os grupos ao abrir a página
+    carregarGrupos();
   </script>
 
 </body>
