@@ -63,7 +63,8 @@
         //subject: "subj-" + Math.random().toString(36).substring(2, 10),
         subject: "cavida.pt/ivida.juan.goncalves",
         //assignedRoles: [{ name: "Developer" }]
-        assignedRoles: [{ name: "EmbeddedAnalyticsUser" }]
+        assignedRoles: [{ name: "EmbeddedAnalyticsUser" }],
+        assignedGroups: [{ name: "EmbeddedUsers" }]
       };
 
       const userResponse = await fetch("https://keyruspt.eu.qlikcloud.com/api/v1/users", {
