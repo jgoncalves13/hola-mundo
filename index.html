@@ -5,32 +5,29 @@
   <title>Criação de Utilizadores Qlik Sense Cloud</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 40px; }
-    h1 { color: #2e6da4; }
-    label, input, button, select { font-size: 16px; margin: 10px 0; display: block; }
+    label, input, button, select { display: block; margin: 10px 0; font-size: 16px; }
     #result { margin-top: 20px; white-space: pre-wrap; color: green; }
   </style>
 </head>
 <body>
 
   <h1>Criação de Utilizadores Qlik Sense Cloud</h1>
+  <label>Email:</label>
+  <input type="email" id="emailInput" placeholder="usuario@dominio.com">
 
-  <label for="emailInput">Email do utilizador:</label>
-  <input type="email" id="emailInput" placeholder="exemplo@empresa.com" required>
-
-  <label for="groupSelect">Selecione o grupo:</label>
+  <label>Selecciona grupo:</label>
   <select id="groupSelect"></select>
 
-  <button onclick="criarUtilizador()">Criação de Utilizador</button>
-
+  <button onclick="criarUtilizador()">Crear usuario + Asignar grupo</button>
   <div id="result"></div>
 
   <script>
     const tenant = "keyruspt.eu.qlikcloud.com";
-    const clientId = "6099c3a096def460e71f581c6465d572"; // <-- Substituir
-    const clientSecret = "75bca66aa5e957df5bb624cea7d7d609a85e7b6e4bbddc45a4b41ebce0f9eed9"; // <-- Substituir
-    let tokenGlobal = "";
+    const clientId = "TU_CLIENT_ID";
+    const clientSecret = "TU_CLIENT_SECRET";
+    let apiToken = "";
 
-    async function obterToken() {
+    async function getToken() {
       const resp = await fetch(`https://${tenant}/oauth/token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -38,87 +35,85 @@
           client_id: clientId,
           client_secret: clientSecret,
           grant_type: "client_credentials",
-          scope: "user_default admin_classic admin.users"
+          scope: "user_default admin.users"
         })
       });
       const data = await resp.json();
-      tokenGlobal = data.access_token;
-      return tokenGlobal;
+      apiToken = data.access_token;
+      return apiToken;
     }
 
-    async function carregarGrupos() {
-      const token = await obterToken();
-      if (!token) {
-        document.getElementById("result").innerText = "Erro ao obter token.";
-        return;
-      }
-
+    async function loadGroups() {
+      await getToken();
       const resp = await fetch(`https://${tenant}/api/v1/groups`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { "Authorization": `Bearer ${apiToken}` }
       });
       const data = await resp.json();
-      const select = document.getElementById("groupSelect");
-      select.innerHTML = "";
-      if (data.data && data.data.length > 0) {
-        data.data.forEach(group => {
-          const opt = document.createElement("option");
-          opt.value = group.id; // guardamos o ID
-          opt.textContent = group.name;
-          select.appendChild(opt);
-        });
-      } else {
+      const sel = document.getElementById("groupSelect");
+      sel.innerHTML = "";
+      data.data.forEach(g => {
         const opt = document.createElement("option");
-        opt.textContent = "Nenhum grupo encontrado";
-        select.appendChild(opt);
-      }
+        opt.value = g.id;
+        opt.text = g.name;
+        sel.add(opt);
+      });
     }
 
     async function criarUtilizador() {
-      const email = document.getElementById('emailInput').value.trim();
-      const groupId = document.getElementById('groupSelect').value;
-      const resultDiv = document.getElementById('result');
+      const email = document.getElementById("emailInput").value.trim();
+      const groupId = document.getElementById("groupSelect").value;
+      const resDiv = document.getElementById("result");
 
-      if (!email) {
-        resultDiv.innerText = "Por favor insira um email válido.";
-        return;
-      }
+      if (!email) return resDiv.innerText = "Introduce un email.";
 
-      if (!tokenGlobal) {
-        await obterToken();
-      }
+      await getToken();
 
-      resultDiv.innerText = "A criar utilizador...";
-
-      const userData = {
-        name: email.split("@")[0],
-        email: email,
-        status: "active",
-        subject: "cavida.pt/" + email,
-        assignedRoles: [{ name: "EmbeddedAnalyticsUser" }],
-        assignedGroups: [{ id: groupId }] // asigna directo al grupo
-      };
-
-      const userResponse = await fetch(`https://${tenant}/api/v1/users`, {
+      resDiv.innerText = "Creando usuario...";
+      const create = await fetch(`https://${tenant}/api/v1/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${tokenGlobal}`
+          "Authorization": `Bearer ${apiToken}`
         },
-        body: JSON.stringify(userData)
+        body: JSON.stringify({
+          name: email.split("@")[0],
+          email: email,
+          status: "active",
+          subject: "app/" + email
+        })
       });
 
-      const userResult = await userResponse.json();
+      const user = await create.json();
+      if (!create.ok) return resDiv.innerText = "Error: " + JSON.stringify(user, null,2);
 
-      if (userResponse.ok) {
-        resultDiv.innerText = "✅ Utilizador criado com sucesso:\n" + JSON.stringify(userResult, null, 2);
+      resDiv.innerText = "Usuario creado. Asignando grupo...";
+
+      const upd = await fetch(`https://${tenant}/api/v1/users/${user.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiToken}`
+        },
+        body: JSON.stringify([
+          {
+            op: "replace",
+            path: "/assignedGroups",
+            value: [{ id: groupId }]
+          }
+        ])
+      });
+
+      if (upd.ok) {
+        resDiv.innerText = "Usuario asignado al grupo correctamente.";
       } else {
-        resultDiv.innerText = "❌ Erro ao criar utilizador:\n" + JSON.stringify(userResult, null, 2);
+        const err = await upd.json();
+        resDiv.innerText = "Error al asignar grupo: " + JSON.stringify(err, null,2);
       }
     }
 
-    // Carrega os grupos ao abrir a página
-    carregarGrupos();
+    window.onload = loadGroups;
   </script>
 
 </body>
 </html>
+
