@@ -23,8 +23,8 @@
 
   <script>
     const tenant = "keyruspt.eu.qlikcloud.com";
-    const clientId = "6099c3a096def460e71f581c6465d572";
-    const clientSecret = "75bca66aa5e957df5bb624cea7d7d609a85e7b6e4bbddc45a4b41ebce0f9eed9";
+    const clientId = "TU_CLIENT_ID";
+    const clientSecret = "TU_CLIENT_SECRET";
     let apiToken = "";
 
     async function getToken() {
@@ -79,7 +79,7 @@
           name: email.split("@")[0],
           email: email,
           status: "active",
-          subject: "cavida.pt/ivida.${email.split("@")[0]}" ,
+          subject: "cavida.pt/" + email,
           assignedRoles: [{ name: "EmbeddedAnalyticsUser" }]
         })
       });
@@ -117,4 +117,3 @@
 
 </body>
 </html>
-
