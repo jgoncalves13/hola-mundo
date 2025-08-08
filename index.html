@@ -77,9 +77,9 @@
         },
         body: JSON.stringify({
           name: email.split("@")[0],
-          email: email,
+          email: "ivida." + email,
           status: "active",
-          subject: "cavida.pt/" + email.split("@")[0],
+          subject: email.split("@")[1] + "/ivida." + email.split("@")[0],
           assignedRoles: [{ name: "EmbeddedAnalyticsUser" }]
         })
       });
