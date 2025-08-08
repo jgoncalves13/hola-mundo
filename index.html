@@ -79,7 +79,7 @@
           name: email.split("@")[0],
           email: email,
           status: "active",
-          subject: "cavida.pt/" + email,
+          subject: "cavida.pt/" + email.split("@")[0],
           assignedRoles: [{ name: "EmbeddedAnalyticsUser" }]
         })
       });
