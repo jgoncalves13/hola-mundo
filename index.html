@@ -66,11 +66,11 @@
       const groupId = document.getElementById("groupSelect").value;
       const resDiv = document.getElementById("result");
 
-      if (!email) return resDiv.innerText = "Introduce un email.";
+      if (!email) return resDiv.innerText = "Introduza um e-mail.";
 
       await getToken();
 
-      resDiv.innerText = "Creando usuario...";
+      resDiv.innerText = "Criando utilizador...";
       const create = await fetch(`https://${tenant}/api/v1/users`, {
         method: "POST",
         headers: {
