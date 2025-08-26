@@ -90,7 +90,7 @@
       const user = await create.json();
       if (!create.ok) return resDiv.innerText = "Error: " + JSON.stringify(user, null,2);
 
-      resDiv.innerText = "Usuario creado. Asignando grupo...";
+      resDiv.innerText = "Utilizador criado. Atribuindo grupo...";
 
       const upd = await fetch(`https://${tenant}/api/v1/users/${user.id}`, {
         method: "PATCH",
@@ -108,10 +108,10 @@
       });
 
       if (upd.ok) {
-        resDiv.innerText = "Usuario asignado al grupo correctamente.";
+        resDiv.innerText = "Utilizador atribuído ao grupo com sucesso.";
       } else {
         const err = await upd.json();
-        resDiv.innerText = "Error al asignar grupo: " + JSON.stringify(err, null,2);
+        resDiv.innerText = "Erro ao atribuir grupo: " + JSON.stringify(err, null,2);
       }
     }
 
